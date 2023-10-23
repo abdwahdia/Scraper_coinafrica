@@ -19,8 +19,11 @@ This app performs simple webscraping of data from coinafrica over multiples page
 """)
 
 st.sidebar.header('User Input Features')
-Pages1 = st.sidebar.selectbox('Vehicles data with owner pages', list([int(p) for p in np.arange(2, 115)]))
-Pages2 = st.sidebar.selectbox('Vehicles data without owner pages', list([int(p) for p in np.arange(2, 115)]))
+Pages1 = st.sidebar.selectbox('Vehicles data pages', list([int(p) for p in np.arange(2, 100)]))
+Pages2 = st.sidebar.selectbox('Motocycles data pages', list([int(p) for p in np.arange(2, 100)]))
+Pages3 = st.sidebar.selectbox('Truck and bus data pages', list([int(p) for p in np.arange(2, 100)]))
+Pages4 = st.sidebar.selectbox('Land data pages', list([int(p) for p in np.arange(2, 100)]))
+Pages5 = st.sidebar.selectbox('Apartements data pages', list([int(p) for p in np.arange(2, 100)]))
 
 # Background function
 def add_bg_from_local(image_file):
@@ -43,78 +46,175 @@ add_bg_from_local('img_file4.jpg')
 @st.cache_data
 
 # Fonction for web scraping vehicle data
-def load_vehicles_data(mul_page):
+def load_data_1(mul_page):
     df = pd.DataFrame()
-    for page in range(1,int(mul_page)):
-        url = f'https://sn.coinafrique.com/categorie/vehicules?page={page}'
-        resp = get(url)
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        containers = soup.find_all('div', class_ ='col s6 m4 l3')
+    for p in range(1, int(mul_page)):
+        Url = f"https://sn.coinafrique.com/categorie/voitures?page={p}"
+        res = get(Url)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        containers = soup.find_all('a', class_ ='card-image ad__card-image waves-block waves-light') 
         data = []
-
-        for container in containers :
+        for container in containers:
+            link = 'https://sn.coinafrique.com' + container['href']
+            res = get(link)
+            Soup = BeautifulSoup(res.text, 'html.parser')
             try :
-                Title = container.find('p', class_ ='ad__card-description').text.strip().split()
-                Brand = ' '.join(Title[:-1])
-                Year = Title[-1]
-                Price = container.find('p',class_ = 'ad__card-price').text.replace(' ', '').replace('CFA', '')
-                Adress = container.find('p', class_ ='ad__card-location').span.text
-                Owner = container.find('div', class_= 'profile-picture').p.text
-                Imagelink = container.find('img')['src']
-                obj = {
-                  'Brand': Brand,
-                  'Year': int(Year),
-                  'Price': int(Price),
-                  'Adress': Adress,
-                  'Owner': Owner, 
-                  'Imagelink': Imagelink
-                  }
+                Marque = Soup.find_all('span', class_ = 'qt')[0].text
+                Modele = Soup.find_all('span', class_ = 'qt')[1].text
+                Kilometrage = Soup.find_all('span', class_ = 'qt')[2].text.replace(' km', '')
+                Transmission = Soup.find_all('span', class_ = 'qt')[3].text
+                Carburant = Soup.find_all('span', class_ = 'qt')[4].text
+                Prix = Soup.find('p', class_  = 'price').text.replace(' ', '').replace('CFA', '')
+
+                obj = {       'Marque': Marque,
+                              'Modele': Modele,
+                              'Kilometrage': Kilometrage,
+                              'Transmission': Transmission,
+                              'Carburant': Carburant,
+                              'Prix': Prix
+                          }
                 data.append(obj)
             except:
-              pass
+                pass
         DF = pd.DataFrame(data)
         df = pd.concat([df, DF], axis = 0)
     df.reset_index(drop = True, inplace = True)
     return df
 
-def load_vehicles_data1(mul_page):
+def load_data_2(mul_page):
     df = pd.DataFrame()
-    for page in range(1,int(mul_page)):
-        url = f'https://sn.coinafrique.com/categorie/vehicules?page={page}'
-        resp = get(url)
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        containers = soup.find_all('div', class_ ='col s6 m4 l3')
+    for p in range(1, int(mul_page)):
+        Url = f"https://sn.coinafrique.com/categorie/motos-et-scooters?page={p}"
+        res = get(Url)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        containers = soup.find_all('a', class_ ='card-image ad__card-image waves-block waves-light') 
         data = []
-
-        for container in containers :
+        for container in containers:
+            link = 'https://sn.coinafrique.com' + container['href']
+            res = get(link)
+            Soup = BeautifulSoup(res.text, 'html.parser')
             try :
-                Title = container.find('p', class_ ='ad__card-description').text.strip().split()
-                Brand = ' '.join(Title[:-1])
-                Year = Title[-1]
-                Price = container.find('p',class_ = 'ad__card-price').text.replace(' ', '').replace('CFA', '')
-                Adress = container.find('p', class_ ='ad__card-location').span.text
-                # Owner = container.find('div', class_= 'profile-picture').p.text
-                Imagelink = container.find('img')['src']
-                obj = {
-                  'Brand': Brand,
-                  'Year': int(Year),
-                  'Price': int(Price),
-                  'Adress': Adress,
-                  # 'Owner': Owner, 
-                  'Imagelink': Imagelink
-                  }
+                Marque = Soup.find_all('span', class_ = 'qt')[0].text
+                Modele = Soup.find_all('span', class_ = 'qt')[1].text
+                Kilometrage = Soup.find_all('span', class_ = 'qt')[2].text.replace(' km', '')
+                Prix = Soup.find('p', class_  = 'price').text.replace(' ', '').replace('CFA', '')
+
+                obj = {       'Marque': Marque,
+                                    'Modele': Modele,
+                                    'Kilometrage': Kilometrage,
+                                    'Prix': Prix
+                                }
                 data.append(obj)
             except:
-              pass
+                pass
+        DF = pd.DataFrame(data)
+        df = pd.concat([df, DF], axis = 0)
+    df.reset_index(drop = True, inplace = True)
+    return df
+
+def load_data_3(mul_page):
+    df = pd.DataFrame()
+    for p in range(1, int(mul_page)):
+        Url = f"https://sn.coinafrique.com/categorie/camions-et-bus?page={p}"
+        res = get(Url)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        containers = soup.find_all('a', class_ ='card-image ad__card-image waves-block waves-light')
+        data = []
+        for container in containers:
+            link = 'https://sn.coinafrique.com' + container['href']
+            res = get(link)
+            Soup = BeautifulSoup(res.text, 'html.parser')
+            try :
+                Marque = Soup.find_all('span', class_ = 'qt')[0].text
+                Modele = Soup.find_all('span', class_ = 'qt')[1].text
+                Kilometrage = Soup.find_all('span', class_ = 'qt')[2].text.replace(' km', '')
+                Prix = Soup.find('p', class_  = 'price').text.replace(' ', '').replace('CFA', '')
+                Duree_Publication = Soup.find('span', class_ = 'valign-wrapper').text
+
+                obj = {       'Marque': Marque,
+                                    'Modele': Modele,
+                                    'Kilometrage': Kilometrage,
+                                    'Duree_Publication': Duree_Publication,
+                                    'Prix': Prix
+                                }
+                data.append(obj)
+            except:
+                pass
+        DF = pd.DataFrame(data)
+        df = pd.concat([df, DF], axis = 0)
+    df.reset_index(drop = True, inplace = True)
+    return df
+
+def load_data_4(mul_page):
+    df = pd.DataFrame()
+    for p in range(1, int(mul_page)):
+      Url = f'https://sn.coinafrique.com/categorie/terrains?page={p}'
+      res = get(Url)
+      soup= BeautifulSoup(res.text)
+      containers = soup.find_all('div', class_ ='col s6 m4 l3')
+      data = []
+
+      for container in containers :
+        try :
+          Titre = container.find('p', class_ ='ad__card-description').text.split()
+          Superficie = Titre[1].strip('m²')
+          Prix = container.find('p',  class_="ad__card-price").text.replace(' ', '').replace('CFA','')
+          Adresse =container.find('p',  class_="ad__card-location").span.text
+          obj = {
+             'Superficie': Superficie,
+             'Prix' : int(Prix),
+             'Adresse': Adresse
+          }
+          data.append(obj)
+        except:
+          pass
+
+      DF = pd.DataFrame(data)
+      df = pd.concat([df, DF], axis = 0)
+    df.reset_index(drop = True, inplace = True)
+    return df
+
+def load_data_5(mul_page):
+    df = pd.DataFrame()
+    for p in range(1, int(mul_page)):
+        Url = f"https://sn.coinafrique.com/categorie/appartements?page={p}"
+        res = get(Url)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        containers = soup.find_all('a', class_ ='card-image ad__card-image waves-block waves-light')
+        data = []
+        for container in containers:
+            link = 'https://sn.coinafrique.com' + container['href']
+            res = get(link)
+            Soup = BeautifulSoup(res.text, 'html.parser')
+            try :
+                Nbre_Pieces = Soup.find_all('span', class_ = 'qt')[0].text
+                Nbre_Sal_Bain = Soup.find_all('span', class_ = 'qt')[1].text
+                Superficie = Soup.find_all('span', class_ = 'qt')[2].text.strip(' m2')
+                Prix = Soup.find('p', class_  = 'price').text.replace(' ', '').replace('CFA', '')
+                Duree_Publication = Soup.find('span', class_ = 'valign-wrapper').text
+
+                obj = {       'Nbre_Pieces': Nbre_Pieces,
+                                    'Nbre_Sal_Bain': Nbre_Sal_Bain,
+                                    'Superficie': Superficie,
+                                    'Duree_Publication': Duree_Publication,
+                                    'Prix': Prix
+                                }
+                data.append(obj)
+            except:
+                pass
         DF = pd.DataFrame(data)
         df = pd.concat([df, DF], axis = 0)
     df.reset_index(drop = True, inplace = True)
     return df
 
 
-Vehicles_data_mul_pag = load_vehicles_data(Pages1)
-Vehicles_data_mul_pag1 = load_vehicles_data1(Pages2)
 
+
+Data_1 = load_data_1(Pages1)
+Data_2= load_data_2(Pages2)
+Data_3 = load_data_3(Pages3)
+Data_4 = load_data_4(Pages4)
+Data_5  = load_data_5(Pages5)
 # Download Vehicles data
 @st.cache_data
 def convert_df(df):
@@ -150,6 +250,9 @@ def local_css(file_name):
 local_css('style.css')        
 
 
-load(Vehicles_data_mul_pag, 'Vehicles data with owner name ', '1','101')
-load(Vehicles_data_mul_pag1, 'Vehicles data without owner name', '2', '102')
+load(Data_1, 'Vehicles data', '1','101')
+load(Data_2, 'Motocycle data', '2', '102')
+load(Data_3, 'Truck and Bus data', '3', '103')
+load(Data_4, 'Land data', '4', '104')
+load(Data_5, 'Apartements data', '5', '105')
 
